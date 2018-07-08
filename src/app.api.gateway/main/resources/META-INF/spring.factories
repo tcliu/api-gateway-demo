@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+app.api.autoconfigure.config.MethodSecurityConfig,\
+app.api.autoconfigure.config.OAuth2BaseJwtConfig

@@ -1,0 +1,12 @@
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+
+mainClassName = "${baseModuleName}.demo.DemoApplication"
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    implementation "io.springfox:springfox-swagger2:${swaggerVersion}"
+    implementation "io.springfox:springfox-swagger-ui:${swaggerVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+}

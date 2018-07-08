@@ -1,0 +1,30 @@
+zuul:
+  routes:
+    app:
+      serviceId: app-service
+      path: /app/**
+    app1:
+      serviceId: app1-service
+      path: /app1/**
+    app2:
+      serviceId: app2-service
+      path: /app2/**
+
+app-service:
+  ribbon:
+    eureka:
+      enabled: false
+    listOfServers: localhost:8100,localhost:8101
+
+app1-service:
+  ribbon:
+    eureka:
+      enabled: false
+    listOfServers: localhost:8100
+
+app2-service:
+  ribbon:
+    eureka:
+      enabled: false
+    listOfServers: localhost:8101
+

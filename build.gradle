@@ -1,0 +1,130 @@
+buildscript {
+    ext {
+        springBootVersion = '2.0.3.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.5.RELEASE"
+    }
+}
+
+ext {
+    baseModuleName = "app.api"
+    compatibleJavaVersion = JavaVersion.VERSION_1_8
+
+    jaxbVersion = "2.3.0"           // Java EE API module removed since JDK 9
+    activationVersion = '1.1.1'     // Java EE API module removed since JDK 9
+    guavaVersion = '23.0'
+    junitVersion = '5.2.0'
+
+    springBootVersion = "2.0.3.RELEASE"
+    springCloudVersion = "2.0.0.RELEASE"
+    swaggerVersion = "2.9.2"
+}
+
+apply plugin: 'base'
+apply plugin: 'idea'
+
+clean {
+    delete "${projectDir}/out"
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: "io.spring.dependency-management"
+
+    group = 'app'
+    version = '1.0.0-SNAPSHOT'
+
+    repositories {
+        jcenter()
+    }
+
+    ext {
+        ideaOutputDir = "${parent.projectDir}/out/${project.name}"
+    }
+
+    compileJava {
+        sourceCompatibility = compatibleJavaVersion
+        targetCompatibility = compatibleJavaVersion
+        buildDir = file("${project.parent.buildDir}/${project.name}")
+        doFirst {
+            if (compatibleJavaVersion.isJava9Compatible()) {
+                options.compilerArgs = [
+                        '--module-path', classpath.asPath,
+                ]
+                classpath = files()
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs = ['main/java']
+                if (!compatibleJavaVersion.isJava9Compatible()) {
+                    exclude 'module-info.java'
+                }
+            }
+            resources {
+                srcDirs = ['main/resources']
+            }
+        }
+        test {
+            java {
+                srcDirs = ['test/java']
+            }
+            resources {
+                srcDirs = ['test/resources']
+            }
+        }
+    }
+
+    clean {
+        delete ideaOutputDir
+    }
+
+    idea {
+        module {
+            outputDir file("${ideaOutputDir}/classes/main")
+            testOutputDir file("${ideaOutputDir}/classes/test")
+        }
+    }
+
+    dependencies {
+        if (JavaVersion.current().isJava9Compatible()) {
+            println "Adding Java EE API modules for :${project.name}"
+            runtime "javax.xml.bind:jaxb-api:${jaxbVersion}"
+            runtime "com.sun.xml.bind:jaxb-core:${jaxbVersion}"
+            runtime "com.sun.xml.bind:jaxb-impl:${jaxbVersion}"
+            runtime "javax.activation:activation:${activationVersion}"
+        }
+    }
+
+    task initSrcDirs {
+        def srcDirs = [
+                "main/java", "main/resources", "test/java", "test/resources"
+        ]
+        srcDirs.each {
+            def srcDir = file("${projectDir}/${it}")
+            if (srcDir.mkdirs()) {
+                println "Directory ${srcDir} created."
+            }
+        }
+    }
+
+    initSrcDirs
+}
+
+// start authorization service
+task a(dependsOn: ":${baseModuleName}.oauth2:bootRun")
+
+// start gateway service
+task g(dependsOn: ":${baseModuleName}.gateway:bootRun")
+
+// start demo service
+task d(dependsOn: ":${baseModuleName}.demo:bootRun")

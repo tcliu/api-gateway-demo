@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: API Demo Server
+    env: Local
+
+server:
+  port: 8100

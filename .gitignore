@@ -1,0 +1,13 @@
+# idea
+/.gradle
+/.idea
+/build
+/dist
+/out
+/**/*.iml
+/*.ipr
+/*.iws
+
+# logs
+/log
+/*.log

@@ -1,0 +1,5 @@
+file('src').eachDir {
+    println "Setting up module :${it.name}"
+    include ":${it.name}"
+    project(":${it.name}").projectDir = it
+}

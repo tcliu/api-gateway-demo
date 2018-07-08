@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: API Gateway Application
+    env: Local
+  profiles:
+    include: 'zuul'
+
+server:
+  port: 8443
+  ssl:
+    key-alias: app
+    key-store: classpath:keystore.p12
+    key-store-type: PKCS12
+    key-store-password: apppass
+
+security:
+  require-ssl: true
+
+oauth2:
+  client-id: user
+  client-secret: user
+  token-url: https://localhost:8444/oauth/token
+  signing-key: 12345

@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: API OAuth2 Authorization Server
+
+server:
+  port: 8444
+  ssl:
+    key-alias: app
+    key-store: classpath:keystore.p12
+    key-store-type: PKCS12
+    key-store-password: apppass
+
+security:
+  require-ssl: true
+
+oauth2:
+  signing-key: 12345
