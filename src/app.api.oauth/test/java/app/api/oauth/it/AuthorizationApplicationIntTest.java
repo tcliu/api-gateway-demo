@@ -3,6 +3,7 @@ package app.api.oauth.it;
 import app.api.oauth.AuthorizationApplication;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ public class AuthorizationApplicationIntTest {
     @LocalServerPort
     private int localPort;
 
+    @Ignore
     @Test
     public void getAuthenticationPrincipal() {
         String accessToken = getAccessToken("user", "user", "john", "123");

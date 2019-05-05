@@ -14,17 +14,20 @@ app-service:
   ribbon:
     eureka:
       enabled: false
-    listOfServers: localhost:8100,localhost:8101
+    listOfServers: localhost:8451,localhost:8452
+    #IsSecured: true
 
 app1-service:
   ribbon:
     eureka:
       enabled: false
-    listOfServers: localhost:8100
+    listOfServers: localhost:8451
+    #IsSecured: true
 
 app2-service:
   ribbon:
     eureka:
       enabled: false
-    listOfServers: localhost:8101
+    listOfServers: localhost:8452
+    #IsSecured: true
 

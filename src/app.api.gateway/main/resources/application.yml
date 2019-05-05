@@ -4,10 +4,13 @@ spring:
     env: Local
   profiles:
     include: 'zuul'
+  resources:
+    add-mappings: true
 
 server:
   port: 8443
   ssl:
+    enabled: true
     key-alias: app
     key-store: classpath:keystore.p12
     key-store-type: PKCS12
@@ -15,9 +18,15 @@ server:
 
 security:
   require-ssl: true
-
-oauth2:
-  client-id: user
-  client-secret: user
-  token-url: https://localhost:8444/oauth/token
-  signing-key: 12345
+  oauth2:
+    jwt:
+      signing-key: 12345
+    client:
+      accessTokenUri: https://localhost:8444/oauth/token
+      userAuthorizationUri: https://localhost:8444/oauth/authorize
+      clientId: api-gateway
+      clientSecret: api-gateway-secret
+    resource:
+      userInfoUri: htts://localhost:8444/user
+    sso:
+      loginPath: /login

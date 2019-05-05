@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Profile("!test")
 public class SwaggerConfig implements WebMvcConfigurer {
 
-    @Value("${oauth2.token-url:}")
+    @Value("${security.oauth2.token-url:}")
     private String tokenUrl;
 
     @Bean

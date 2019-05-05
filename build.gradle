@@ -1,123 +1,143 @@
 buildscript {
-    ext {
-        springBootVersion = '2.0.3.RELEASE'
-    }
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-        classpath "io.spring.gradle:dependency-management-plugin:1.0.5.RELEASE"
-    }
+  ext {
+    springBootVersion = '2.1.4.RELEASE'
+  }
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+    classpath "io.spring.gradle:dependency-management-plugin:1.0.7.RELEASE"
+  }
+}
+
+plugins {
+  id 'java'
 }
 
 ext {
-    baseModuleName = "app.api"
-    compatibleJavaVersion = JavaVersion.VERSION_1_8
+  baseModuleName = "app.api"
+  compatibleJavaVersion = JavaVersion.VERSION_1_8
 
-    jaxbVersion = "2.3.0"           // Java EE API module removed since JDK 9
-    activationVersion = '1.1.1'     // Java EE API module removed since JDK 9
-    guavaVersion = '23.0'
-    junitVersion = '5.2.0'
+  springVersion = "5.1.6.RELEASE"
+  springBootVersion = "2.1.4.RELEASE"
+  springCloudVersion = "2.1.1.RELEASE"
+  swaggerVersion = "2.9.2"
+  lombokVersion = "1.18.6"
 
-    springBootVersion = "2.0.3.RELEASE"
-    springCloudVersion = "2.0.0.RELEASE"
-    swaggerVersion = "2.9.2"
+  jaxbVersion = "2.3.0"           // Java EE API module removed since JDK 9
+  activationVersion = '1.1.1'     // Java EE API module removed since JDK 9
 }
 
 apply plugin: 'base'
 apply plugin: 'idea'
 
 clean {
-    delete "${projectDir}/out"
+  delete "${projectDir}/out"
 }
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'idea'
-    apply plugin: "io.spring.dependency-management"
+  apply plugin: 'java'
+  apply plugin: 'idea'
+  apply plugin: "io.spring.dependency-management"
 
-    group = 'app'
-    version = '1.0.0-SNAPSHOT'
+  group = 'app'
+  version = '1.0.0-SNAPSHOT'
 
-    repositories {
-        jcenter()
+  repositories {
+    jcenter()
+  }
+
+  dependencies {
+    if (compatibleJavaVersion.isJava9Compatible()) {
+      println "Adding Java EE API modules for :${project.name}"
+      runtime "javax.xml.bind:jaxb-api:${jaxbVersion}"
+      runtime "com.sun.xml.bind:jaxb-core:${jaxbVersion}"
+      runtime "com.sun.xml.bind:jaxb-impl:${jaxbVersion}"
+      runtime "javax.activation:activation:${activationVersion}"
     }
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+  }
 
-    ext {
-        ideaOutputDir = "${parent.projectDir}/out/${project.name}"
-    }
+  ext {
+    ideaOutputDir = "${parent.projectDir}/out/${project.name}"
+  }
 
-    compileJava {
-        sourceCompatibility = compatibleJavaVersion
-        targetCompatibility = compatibleJavaVersion
-        buildDir = file("${project.parent.buildDir}/${project.name}")
-        doFirst {
-            if (compatibleJavaVersion.isJava9Compatible()) {
-                options.compilerArgs = [
-                        '--module-path', classpath.asPath,
-                ]
-                classpath = files()
-            }
-        }
-    }
-
-    sourceSets {
-        main {
-            java {
-                srcDirs = ['main/java']
-                if (!compatibleJavaVersion.isJava9Compatible()) {
-                    exclude 'module-info.java'
-                }
-            }
-            resources {
-                srcDirs = ['main/resources']
-            }
-        }
-        test {
-            java {
-                srcDirs = ['test/java']
-            }
-            resources {
-                srcDirs = ['test/resources']
-            }
-        }
-    }
-
-    clean {
-        delete ideaOutputDir
-    }
-
-    idea {
-        module {
-            outputDir file("${ideaOutputDir}/classes/main")
-            testOutputDir file("${ideaOutputDir}/classes/test")
-        }
-    }
-
-    dependencies {
-        if (JavaVersion.current().isJava9Compatible()) {
-            println "Adding Java EE API modules for :${project.name}"
-            runtime "javax.xml.bind:jaxb-api:${jaxbVersion}"
-            runtime "com.sun.xml.bind:jaxb-core:${jaxbVersion}"
-            runtime "com.sun.xml.bind:jaxb-impl:${jaxbVersion}"
-            runtime "javax.activation:activation:${activationVersion}"
-        }
-    }
-
-    task initSrcDirs {
-        def srcDirs = [
-                "main/java", "main/resources", "test/java", "test/resources"
+  compileJava {
+    sourceCompatibility = compatibleJavaVersion
+    targetCompatibility = compatibleJavaVersion
+    buildDir = file("${project.parent.buildDir}/${project.name}")
+    doFirst {
+      if (compatibleJavaVersion.isJava9Compatible()) {
+        options.compilerArgs = [
+          '--module-path', classpath.asPath
         ]
-        srcDirs.each {
-            def srcDir = file("${projectDir}/${it}")
-            if (srcDir.mkdirs()) {
-                println "Directory ${srcDir} created."
-            }
-        }
+        classpath = files()
+      }
     }
+  }
 
-    initSrcDirs
+  sourceSets {
+    main {
+      java {
+        srcDirs = ['main/java']
+      }
+      resources {
+        srcDirs = ['main/resources']
+      }
+    }
+    test {
+      java {
+        srcDirs = ['test/java']
+      }
+      resources {
+        srcDirs = ['test/resources']
+      }
+    }
+  }
+
+  clean {
+    delete ideaOutputDir
+  }
+
+  idea {
+    module {
+      outputDir file("${ideaOutputDir}/classes/main")
+      testOutputDir file("${ideaOutputDir}/classes/test")
+    }
+  }
+
+  task initSrcDirs {
+    def srcDirs = [
+      "main/java", "main/resources", "test/java", "test/resources"
+    ]
+    srcDirs.each {
+      def srcDir = file("${projectDir}/${it}")
+      if (srcDir.mkdirs()) {
+        println "Directory ${srcDir} created."
+      }
+    }
+  }
+
+  task initDefaultPackages {
+    def srcDirs = [
+      "main/java", "test/java"
+    ]
+    srcDirs.each {
+      def srcDir = file("${projectDir}/${it}")
+      // create packages only when the source directory is empty
+      if (srcDir.listFiles().length == 0) {
+        def packageDir = file("${srcDir}/${projectDir.getName().replace('.', "/")}")
+        if (packageDir.mkdirs()) {
+          println "Default package directory ${packageDir} created"
+        }
+      }
+    }
+  }
+
+  initSrcDirs
+  initDefaultPackages
 }
 
 // start authorization service

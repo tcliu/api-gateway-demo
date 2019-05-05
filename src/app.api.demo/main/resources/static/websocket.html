@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style type="text/css">
+      #data-container {
+        max-height: 300px;
+        overflow: auto;
+      }
+    </style>
+</head>
+<body>
+  <div id="data-container">
+    <div v-for="message in messages">{{ message.value }}</div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://code.jquery.com/jquery-3.4.0.min.js"></script>
+  <script>
+    const ws = new WebSocket('ws://localhost:8452/e2')
+    ws.onopen = () => {
+      console.log('ws.onopen', ws)
+      ws.send('opened')
+    }
+    ws.onerror = e => {
+      console.error('ws.onerror', e)
+    }
+    ws.onclose = e => {
+      console.error('closing connection')
+    }
+    ws.onmessage = data => {
+      console.info('received', data)
+    }
+    const store = {
+      state: {
+        messages: []
+      }
+    }
+    const app = new Vue({
+      el: '#data-container',
+      data: {
+        messages: store.state.messages
+      },
+      updated: function() {
+        var el = this.$el
+        this.$nextTick(function () {
+          console.log('updated')
+          $(el).scrollTop($(el).prop('scrollHeight'))
+        })
+      }
+    })
+
+  </script>
+</body>
+</html>

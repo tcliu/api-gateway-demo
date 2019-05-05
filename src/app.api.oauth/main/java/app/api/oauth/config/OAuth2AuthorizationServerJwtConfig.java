@@ -22,7 +22,7 @@ import java.util.Arrays;
 @EnableAuthorizationServer
 public class OAuth2AuthorizationServerJwtConfig extends AuthorizationServerConfigurerAdapter {
 
-    @Value("${oauth2.signing-key:}")
+    @Value("${security.oauth2.signing-key:}")
     private String signingKey;
 
     @Autowired
@@ -54,22 +54,13 @@ public class OAuth2AuthorizationServerJwtConfig extends AuthorizationServerConfi
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.inMemory()
-            .withClient("user")
-            .secret(passwordEncoder.encode("user"))
+            .withClient("api-gateway")
+            .secret(passwordEncoder.encode("api-gateway-secret"))
             .authorizedGrantTypes("password", "authorization_code", "refresh_token")
-            .scopes("user", "read", "write")
+            .scopes("read", "write")
             .accessTokenValiditySeconds(3600) // 1 hour
             .refreshTokenValiditySeconds(3600 * 24 * 30) // 30 days
             // .redirectUris("http://localhost:8089/");
-
-            .and()
-
-            .withClient("op")
-            .secret(passwordEncoder.encode("op"))
-            .authorizedGrantTypes("password", "authorization_code", "refresh_token")
-            .scopes("operation", "read", "write")
-            .accessTokenValiditySeconds(3600) // 1 hour
-            .refreshTokenValiditySeconds(3600 * 24 * 30) // 30 days
         ;
     }
 

@@ -1,11 +1,15 @@
 package app.api.gateway.config;
 
+import com.fasterxml.classmate.TypeResolver;
 import com.google.common.base.Predicates;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -21,25 +25,37 @@ import springfox.documentation.service.SecurityScheme;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger.web.DocExpansion;
+import springfox.documentation.swagger.web.ModelRendering;
+import springfox.documentation.swagger.web.OperationsSorter;
 import springfox.documentation.swagger.web.SecurityConfiguration;
 import springfox.documentation.swagger.web.SecurityConfigurationBuilder;
 import springfox.documentation.swagger.web.SwaggerResource;
 import springfox.documentation.swagger.web.SwaggerResourcesProvider;
+import springfox.documentation.swagger.web.TagsSorter;
+import springfox.documentation.swagger.web.UiConfiguration;
+import springfox.documentation.swagger.web.UiConfigurationBuilder;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import java.lang.reflect.WildcardType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static springfox.documentation.schema.AlternateTypeRules.newRule;
+
 @Configuration
 @EnableSwagger2
 @Profile("!test")
 public class SwaggerConfig implements WebMvcConfigurer {
 
-    @Value("${oauth2.token-url:}")
+    @Value("${security.oauth2.client.accessTokenUri:}")
     private String tokenUrl;
+
+    @Autowired
+    private TypeResolver typeResolver;
 
     @Bean
     public Docket apiDoc(@Value("${spring.application.name:Unknown}") String title,
@@ -49,27 +65,33 @@ public class SwaggerConfig implements WebMvcConfigurer {
                          @Value("${spring.application.version:Unknown}") String version) {
         return new Docket(DocumentationType.SWAGGER_2)
             .apiInfo(new ApiInfoBuilder()
-                .title(title + " (" + env.toUpperCase() + ")")
+                .title(title + " (" + env + ")")
                 .description(description)
                 .contact(new Contact(contact, null, null))
                 .version(version)
                 .build())
             .directModelSubstitute(LocalDate.class, java.sql.Date.class)
             .directModelSubstitute(LocalDateTime.class, java.util.Date.class)
+            .genericModelSubstitutes(ResponseEntity.class)
+            .alternateTypeRules(
+                newRule(typeResolver.resolve(DeferredResult.class,
+                        typeResolver.resolve(ResponseEntity.class, WildcardType.class)),
+                        typeResolver.resolve(WildcardType.class)))
+            .useDefaultResponseMessages(false)
+
             .select()
             .apis(RequestHandlerSelectors.basePackage("app.api.gateway.controller"))
             .paths(Predicates.not(PathSelectors.regex("/error.*")))
             .build()
             .securitySchemes(securitySchemes())
-            .securityContexts(securityContexts());
-
-
+            .securityContexts(securityContexts())
+            .enableUrlTemplating(true);
     }
 
     @Bean
     public SecurityConfiguration securityConfig(
-            @Value("${oauth2.client-id:}") String clientId,
-            @Value("${oauth2.client-secret:}") String clientSecret,
+            @Value("${security.oauth2.client.clientId:}") String clientId,
+            @Value("${security.oauth2.client.clientSecret:}") String clientSecret,
             @Value("${spring.application.name:Unknown}") String appName) {
         return SecurityConfigurationBuilder.builder()
                 .clientId(clientId)
@@ -89,12 +111,24 @@ public class SwaggerConfig implements WebMvcConfigurer {
         );
     }
 
-    @Override
-    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("swagger-ui.html").addResourceLocations(
-                "classpath:/META-INF/resources/");
-        registry.addResourceHandler("/webjars/**").addResourceLocations(
-                "classpath:/META-INF/resources/webjars/");
+    @Bean
+    public UiConfiguration uiConfig() {
+        return UiConfigurationBuilder.builder()
+                .deepLinking(true)
+                .displayOperationId(false)
+                .defaultModelsExpandDepth(1)
+                .defaultModelExpandDepth(1)
+                .defaultModelRendering(ModelRendering.EXAMPLE)
+                .displayRequestDuration(false)
+                .docExpansion(DocExpansion.NONE)
+                .filter(false)
+                .maxDisplayedTags(null)
+                .operationsSorter(OperationsSorter.ALPHA)
+                .showExtensions(false)
+                .tagsSorter(TagsSorter.ALPHA)
+                .supportedSubmitMethods(UiConfiguration.Constants.DEFAULT_SUBMIT_METHODS)
+                .validatorUrl(null)
+                .build();
     }
 
     private SwaggerResource swaggerResource(String name, String location, String version) {

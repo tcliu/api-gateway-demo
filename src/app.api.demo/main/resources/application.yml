@@ -4,4 +4,4 @@ spring:
     env: Local
 
 server:
-  port: 8100
+  port: 8451
